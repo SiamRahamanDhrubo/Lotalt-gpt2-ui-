@@ -66,4 +66,55 @@
   </style>
 </head>
 <body>
-  <div cl
+  <div class="chat-container">
+    <div id="chat-window" class="chat-window">
+      <div id="chat-output" class="chat-output"></div>
+    </div>
+    <input id="user-input" type="text" placeholder="Type your message..." />
+    <button id="send-btn">Send</button>
+  </div>
+
+  <script>
+    const sendButton = document.getElementById('send-btn');
+    const userInput = document.getElementById('user-input');
+    const chatOutput = document.getElementById('chat-output');
+
+    sendButton.addEventListener('click', async function() {
+      const userMessage = userInput.value.trim();
+      if (userMessage) {
+        appendMessage('You', userMessage);
+        await sendPromptToColab(userMessage);
+        userInput.value = '';
+      }
+    });
+
+    function appendMessage(sender, message) {
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add('message');
+      messageDiv.textContent = `${sender}: ${message}`;
+      chatOutput.appendChild(messageDiv);
+      chatOutput.scrollTop = chatOutput.scrollHeight;
+    }
+
+    async function sendPromptToColab(userMessage) {
+      try {
+        const response = await fetch('http://<COLAB_NGROK_URL>/send_prompt', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ user_input: userMessage })
+        });
+        const data = await response.json();
+        if (data.response) {
+          appendMessage('Bot', data.response);
+        } else {
+          appendMessage('Bot', 'Error: No response');
+        }
+      } catch (error) {
+        appendMessage('Bot', 'Error connecting to server');
+      }
+    }
+  </script>
+</body>
+</html>
